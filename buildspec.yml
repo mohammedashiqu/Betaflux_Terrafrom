@@ -10,7 +10,6 @@ phases:
   pre_build:
     commands:
       - terraform --version
-      - cd project
       - terraform init
       - terraform plan
       - terraform fmt
