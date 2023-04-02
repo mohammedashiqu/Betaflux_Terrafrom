@@ -1,0 +1,215 @@
+## resource variable
+--------------------
+input variable
+---------------
+if not specifying default in variable, while we executing terraform command it will prompt for variable
+we can give variable while executing or terraform apply --auto-approve -var "region=us-east-1"
+
+export the variable (priority - 1)
+--------------------
+export TF_VAR_filename = "myfile"
+export TF_VAR_vpc = "my_vpc"
+
+terraform.tfvars (priority - 2)
+-----------------
+filename = "myfile"
+vpc = "my_vpc"
+
+terraform.tfavrs.json
+*.auto.tfvars
+*.auto.tfvars.json
+dev.auto.tfvars
+
+variable precednce list
+------------------------
+environment variable
+terraform.tfvars
+dev.auto.tfvars (alphabetical order)
+-var "name=ashiq" -> higher priority
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## refer resource in another context
+
+if we created a vpc and subnet if you wnat to get vpc id in subnet we can user "${aws_vpc.vpc.id}" it will refer vpc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## how create dependancy for resource
+
+when we create subnet it required vpc first. so we can mention under subnet "depnds on -> vpc"
+
+resource "aws_vpc" "vpc"{
+cidr_block = "10.0.0.0/24"
+}
+
+resource "aws_subnet" "subnet"{
+cidr_block = "10.0.0.0/25" 
+vpc_id = "aws_vpc.vpc.id"
+depends_on = [aws_vpc.vpc]
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## how to get terraform output values
+
+when we create any resource we can store the resource information or we can senf the resource information to any other
+resources or even we can use that in different module.
+
+we can print terraform output 
+## terraform output (it will print terraform output)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## terraform commands
+
+terraform init
+terraform plan
+terraform apply 
+terraform fmt
+terraform validate - validate syntax
+terraform show - it will show all resources list in key value pair
+terraform show -json - it will print all resource information in jso output format
+terraform provider - it will print provider information
+terraform providers mirror /anothe/directory - it will copy provider plugins from one directory to another directory
+terraform output - it will output all terraform resources
+terraform output resource-name  - it will print specific resource information  
+terrafrom refresh - this command will update state file if any chnages in resources
+terraform plan --refresh=false - this is going to suppress terraform refresh command
+
+how to find manually updated resources in terraform
+---------------------------------------------------
+first run -> terraform refresh
+second run -> terraform plan 
+now we will get set of items add/remove these all items are create/delete when apply the infra structure
+but by using terraform plan command we can find all changed resources it will not change anything.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## terraform is immutable infra structure, whcih means whenever you wnat to chnage anything on purticular resource it will destroy
+and create new one.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## life cycle rules in terraform
+
+# to create befor destroy
+
+lifecycle {
+	create_before_destroy = true
+}
+
+
+# we can prevent destroy
+lifecycle {
+	prevent_destroy = true
+}
+
+# we can prevent resource chnages
+lifecycle{
+	ignore_changes = all
+}
+
+lifecycle{
+	ignore_changes = [ami, tags]
+}
+
+delete_before_create = it will delete infrastructure before creating new
+
+replace - it will replace instead of chnaging infra
+
+update_in_place - it will update resources instead of replacing
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## data sources
+by using data sources we can fetch data from other sources as well, such as ami, subnet and vpc.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## count meta argument
+by using count meta argument we can create multiple instnaces of resource
+
+main.tf
+
+resource "subnet" "subnet"{
+	cidr_block = var.subnet_cidr[count.index]
+	vpc_id = id-vpckahkbkcjhbiwhi
+}
+
+variable.tf
+
+variable "subnet_cidr"{
+	description = "cidr for subnet"
+	count = length(var.subnet_cidr)
+	type = list(string)
+	default = ["10.0.0.0/24",10.0.1.0/24]
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## for each
+
+for each only work with -> map or set
+
+we can user set as below
+
+set(string)
+
+map(object)
+
+or else we can convert in to set for that u can use below command
+
+for_each = toset(var.filename)
+filename = var.variable
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## terraform state commands
+
+list
+mv
+pull
+rm
+show
+
+terraform state list aws_s3_bukcet.my_bucket
+terraform state mv source destination
+we can use mv command to move state file from one dir to anotehr dir and rename anything from satte file
+
+terraform state pull -> this comamnd going to pull state file from s3 bucket to local syste
+terraform state pull > terraform.tfstate - if you want to create file for state file u have to execute blow script
+terraform state rm aws_vpc.myvpc -> this command used to remove resources from state file
+
+onfiluer = continue -> if you wnat skip fail you can mention onfailuer=continue if it fail it will continue.
+we have twi types of provisioner -> remote exec
+                                 -> local exec
+userdata - instead of using provisioners(remote exec and local exec) we can use userdata it is native for aws,azure and gcp
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## terraform taint
+terraform taint -> this command used to mark  for chnages
+terraform untain > this command used to remove/unmark tain
+
+## teraform log levels
+terraform support 5 log levels
+
+info, warning, error, debug and trace
+
+how to set log for terraform
+----------------------------
+TF_LOG=TRACE
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## if we want to import aws manually created resources to terraform we acn use import command
+terraform import aws_vpc.vpc vpc-id-64648585875758599
+
+
+we can use terraform  module from terraform registry as well
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## terraform condition
+condition ? true_val : false_val
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+## terraform workspace
+
+how to list all workspace -> terraform workspace list
+how to create new workspace -> terraform workspace new dev
+switch from one workspace to another -> terraform workspace select worspace-name
+show current workspace -> terraform workspace show
+delete workspace -> terraform workspace delete worspace-name
+
